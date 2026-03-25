@@ -1,0 +1,42 @@
+:root {
+  --bg: #13142B;
+  --text: #ffffff;
+  --subtext: #b0b3c7;
+  --border: rgba(255, 255, 255, 0.08);
+
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* RESET */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* BODY */
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* ROOT APP */
+#root {
+  display: flex;
+  flex-direction: column;
+}
+
+/* TEXT */
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}

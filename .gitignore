@@ -1,0 +1,17 @@
+# Node
+frontend/node_modules/
+frontend/dist/
+
+# Python
+backend/__pycache__/
+backend/temp_*.mp3
+backend/temp_*.png
+
+# Other stuff
+otherstuff/
+
+# Node modules
+node_modules/
+
+# OS Files
+.DS_Store

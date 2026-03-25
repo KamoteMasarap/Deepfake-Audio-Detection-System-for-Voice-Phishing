@@ -1,0 +1,22 @@
+📂 public
+  📄 favicon.svg
+  📄 icons.svg
+📂 src
+  📂 assets
+    📄 hero.png
+    📄 Logo.png
+    📄 react.svg
+    📄 vite.svg
+  📂 Libraries
+    📄 Header.jsx
+    📄 Upload.jsx
+  📂 Stylesheets
+    📄 Header.css
+    📄 Upload.css
+  📄 App.jsx
+  📄 index.css
+  📄 main.jsx
+📄 eslint.config.js
+📄 get_tree.js
+📄 index.html
+📄 vite.config.js
