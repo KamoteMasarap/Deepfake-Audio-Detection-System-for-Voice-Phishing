@@ -7,5 +7,5 @@ python -m uvicorn main:app --reload
 
 
 git add .
-git commit -m "New model and analysis"
+git commit -m "Resnet Update"
 git push origin main

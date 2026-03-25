@@ -9,7 +9,7 @@ from PIL import Image
 import librosa
 import librosa.display
 import matplotlib
-matplotlib.use('Agg') # CRITICAL: Forces Matplotlib to draw silently in the background
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -26,10 +26,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# ==========================================
-# 1. DEFINE BOTH NEURAL ARCHITECTURES
-# ==========================================
 
 class DeepfakeCNN(nn.Module):
     def __init__(self):
@@ -58,9 +54,6 @@ def get_resnet_model():
     )
     return model
 
-# ==========================================
-# 2. WAKE UP BOTH BRAINS ON THE GPU
-# ==========================================
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 models_dir = os.path.join(os.path.dirname(__file__), "models")
 
@@ -80,9 +73,6 @@ if os.path.exists(resnet_path):
     model_resnet.eval()
     print("✅ ResNet-18 Model Loaded!")
 
-# ==========================================
-# 3. DEFINE THE DUAL VISION SYSTEMS
-# ==========================================
 transform_rgb = transforms.Compose([
     transforms.Resize((128, 128)),
     transforms.ToTensor(),
@@ -97,9 +87,6 @@ transform_gray = transforms.Compose([
 ])
 classes = ['FAKE', 'REAL']
 
-# ==========================================
-# 4. THE MASTER API ENDPOINT
-# ==========================================
 @app.post("/analyze")
 def analyze_audio(file: UploadFile = File(...)):
     print(f"\n--- NEW DUAL ANALYSIS REQUEST: {file.filename} ---")
