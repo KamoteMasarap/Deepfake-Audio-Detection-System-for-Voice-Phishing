@@ -100,7 +100,7 @@ def analyze_audio(file: UploadFile = File(...)):
         print("Step 1: Loading audio with librosa...")
         audio_data, sample_rate = librosa.load(temp_audio_path, sr=16000)
         
-        print("Step 2: Extracting Dynamic Audio Features...")
+        print("Step 2: Extracting Dynamic Audio Features (Level 1)...")
         f0, voiced_flag, voiced_probs = librosa.pyin(audio_data, fmin=librosa.note_to_hz('C2'), fmax=librosa.note_to_hz('C7'))
         valid_f0 = f0[~np.isnan(f0)]
         pitch_variation = np.std(valid_f0) if len(valid_f0) > 0 else 0
@@ -111,6 +111,19 @@ def analyze_audio(file: UploadFile = File(...)):
         tempo = float(tempo[0]) if isinstance(tempo, np.ndarray) else float(tempo)
         
         zcr = np.mean(librosa.feature.zero_crossing_rate(audio_data))
+
+        print("Step 2.5: Extracting Advanced XAI Features (Level 2)...")
+        # 1. MFCC Variance (Vocal Tract Shape)
+        mfccs = librosa.feature.mfcc(y=audio_data, sr=sample_rate, n_mfcc=13)
+        mfcc_variance = float(np.mean(np.var(mfccs, axis=1)))
+
+        # 2. Spectral Roll-off (High-Frequency Cutoff/Hiss)
+        rolloff = librosa.feature.spectral_rolloff(y=audio_data, sr=sample_rate, roll_percent=0.85)[0]
+        rolloff_mean = float(np.mean(rolloff))
+
+        # 3. Onset Envelope Variance (Syllable Attack Emphasis)
+        onset_env = librosa.onset.onset_strength(y=audio_data, sr=sample_rate)
+        onset_variance = float(np.var(onset_env))
 
         print("Step 3: Forcing audio to exactly 4 seconds...")
         audio_data = librosa.util.fix_length(audio_data, size=64000)
@@ -145,18 +158,67 @@ def analyze_audio(file: UploadFile = File(...)):
         img_tensor_gray = transform_gray(img).unsqueeze(0).to(device)
         with torch.no_grad():
             prob_resnet = model_resnet(img_tensor_gray).item()
-            if prob_resnet > 0.5:
-                resnet_verdict = "FAKE"
-                resnet_confidence = round(prob_resnet * 100, 2)
-            else:
-                resnet_verdict = "REAL"
-                resnet_confidence = round((1.0 - prob_resnet) * 100, 2)
+            base_fake_prob = prob_resnet
+            
+            # --- START ACOUSTIC MODIFIER (BONUS/PENALTY & VETO) ---
+            acoustic_modifier = 0.0
+            override_msg = None
 
-        print(f"RESULTS | Super: {super_verdict} ({super_confidence}%) | ResNet: {resnet_verdict} ({resnet_confidence}%)")
+            # 1. PITCH VARIATION CHECK (Level 1)
+            if pitch_variation < 5.0:
+                acoustic_modifier += 0.45
+                override_msg = "🚨 VETO: Biologically impossible pitch variation (Robotic)."
+            elif pitch_variation < 14.5:
+                acoustic_modifier += 0.25 
+                if not override_msg:
+                    override_msg = "🚨 VETO: Extremely stiff speech cadence detected."
+            elif pitch_variation > 25.0:
+                acoustic_modifier -= 0.15
+
+            # 2. ZERO CROSSING RATE CHECK (Level 1)
+            if zcr < 0.01:
+                acoustic_modifier += 0.35
+                if not override_msg:
+                    override_msg = "🚨 VETO: Zero natural breath sounds detected."
+            elif zcr < 0.05:
+                acoustic_modifier += 0.05
+
+            # 3. MFCC VARIANCE CHECK (Level 2: Vocal Tract)
+            if mfcc_variance < 150.0: 
+                acoustic_modifier += 0.20
+                if not override_msg:
+                    override_msg = "🚨 VETO: Synthetic vocal tract detected (Low MFCC Variance)."
+            
+            # 4. SPECTRAL ROLL-OFF CHECK (Level 2: Muffled/Hiss)
+            if rolloff_mean < 2000.0:
+                acoustic_modifier += 0.15
+                if not override_msg:
+                    override_msg = "🚨 VETO: Unnatural high-frequency cutoff (Muffled)."
+                    
+            # 5. ONSET VARIANCE CHECK (Level 2: Syllable Attack)
+            if onset_variance < 0.5:
+                acoustic_modifier += 0.15
+                if not override_msg:
+                    override_msg = "🚨 VETO: Robotic syllable emphasis (Uniform Onset)."
+
+            # --- CALCULATE TRUE FINAL ---
+            final_fake_prob = base_fake_prob + acoustic_modifier
+            final_fake_prob = max(0.0, min(1.0, final_fake_prob)) # Clamp between 0 and 1
+            
+            # ResNet raw logic (For the diagnostic UI card)
+            resnet_verdict = "FAKE" if base_fake_prob > 0.5 else "REAL"
+            resnet_confidence = round((base_fake_prob if base_fake_prob > 0.5 else 1.0 - base_fake_prob) * 100, 2)
+
+            # True Hybrid logic (For the main progress bar)
+            final_verdict = "FAKE" if final_fake_prob >= 0.5 else "REAL"
+            final_confidence = round((final_fake_prob if final_fake_prob >= 0.5 else 1.0 - final_fake_prob) * 100, 2)
+            # --- END MODIFIER ---
+
+        print(f"RESULTS | Super: {super_verdict} ({super_confidence}%) | Final Hybrid: {final_verdict} ({final_confidence}%)")
 
         return {
-            "verdict": resnet_verdict, 
-            "confidence": resnet_confidence,
+            "verdict": final_verdict, 
+            "confidence": final_confidence,
             "spectrogram": f"data:image/png;base64,{img_str}",
             "breakdown": {
                 "super": {
@@ -166,13 +228,20 @@ def analyze_audio(file: UploadFile = File(...)):
                 "resnet": {
                     "verdict": resnet_verdict,
                     "confidence": resnet_confidence
+                },
+                "acoustics": {
+                    "modifier_percent": round(acoustic_modifier * 100, 2),
+                    "override_msg": override_msg
                 }
             },
             "features": {
                 "pitch_std": float(pitch_variation),
                 "flatness": float(flatness),
                 "tempo": float(tempo),
-                "zcr": float(zcr)
+                "zcr": float(zcr),
+                "mfcc_var": float(mfcc_variance),
+                "rolloff": float(rolloff_mean),
+                "onset_var": float(onset_variance)
             }
         }
         

@@ -1,7 +1,8 @@
+cmd
 cd frontend
 npm run dev
 
-
+cmd
 cd backend
 python -m uvicorn main:app --reload
 

@@ -287,6 +287,27 @@ const Upload = () => {
          result: `ZCR: ${audioFeatures.zcr.toFixed(3)}`,
          interpretation: audioFeatures.zcr > 0.02 ? "Natural Ambient Noise" : "Unnaturally Clean",
          interpretationClass: audioFeatures.zcr > 0.02 ? "good" : "bad",
+      },
+      {
+         feature: "Vocal Tract Variance",
+         description: "MFCC Variance measuring dynamic mouth/throat shape",
+         result: `MFCC Var: ${audioFeatures.mfcc_var ? audioFeatures.mfcc_var.toFixed(1) : 'N/A'}`,
+         interpretation: (audioFeatures.mfcc_var && audioFeatures.mfcc_var > 150) ? "Dynamic Shape (Human)" : "Static Shape (AI Model)",
+         interpretationClass: (audioFeatures.mfcc_var && audioFeatures.mfcc_var > 150) ? "good" : "bad",
+      },
+      {
+         feature: "High-Frequency Profile",
+         description: "Spectral Roll-off measuring audio cutoff/hiss",
+         result: `Roll-off: ${audioFeatures.rolloff ? audioFeatures.rolloff.toFixed(0) : 'N/A'} Hz`,
+         interpretation: (audioFeatures.rolloff && audioFeatures.rolloff > 2000) ? "Natural Spectrum" : "Muffled/Cutoff (AI Artifact)",
+         interpretationClass: (audioFeatures.rolloff && audioFeatures.rolloff > 2000) ? "good" : "bad",
+      },
+      {
+         feature: "Syllable Attack",
+         description: "Onset Envelope Variance measuring emphasis",
+         result: `Onset Var: ${audioFeatures.onset_var ? audioFeatures.onset_var.toFixed(2) : 'N/A'}`,
+         interpretation: (audioFeatures.onset_var && audioFeatures.onset_var > 0.5) ? "Variable Emphasis (Human)" : "Robotic Uniformity",
+         interpretationClass: (audioFeatures.onset_var && audioFeatures.onset_var > 0.5) ? "good" : "bad",
       }
     ];
   };
@@ -405,7 +426,79 @@ const Upload = () => {
 
             {status === "done" && (
               <div className="upload__analysisPlateau">
-                <div className="upload__cards">
+                
+                {/* === FLOW STEP 1: INITIAL AI ANALYSIS === */}
+                {/* === DATA WATERFALL START === */}
+                {modelBreakdown && (
+                  <div className="upload__modelGridWrap" style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
+                    
+                    {/* LAYER 1: RAW NEURAL NETWORKS */}
+                    <div className="upload__modelGrid" style={{ marginBottom: "0px", marginTop: "0px" }}>
+                      <div className="upload__modelCard">
+                        <h4>12k Super Model</h4>
+                        <div className={`upload__modelVerdict upload__modelVerdict--${modelBreakdown.super.verdict.toLowerCase()}`}>
+                          {modelBreakdown.super.verdict} ({modelBreakdown.super.confidence}%)
+                        </div>
+                        <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)', marginTop: '6px', fontWeight: '500' }}>
+                          {modelBreakdown.super.verdict === 'REAL' ? 'FAKE' : 'REAL'}: {(100 - modelBreakdown.super.confidence).toFixed(1)}%
+                        </div>
+                      </div>
+                      
+                      <div className="upload__modelCard upload__modelCard--super">
+                        <h4>ResNet-18 (Base)</h4>
+                        <div className={`upload__modelVerdict upload__modelVerdict--${modelBreakdown.resnet.verdict.toLowerCase()}`}>
+                          {modelBreakdown.resnet.verdict} ({modelBreakdown.resnet.confidence}%)
+                        </div>
+                        {/* Highlight the FAKE probability since it's the mathematical base for our Acoustic Engine */}
+                        <div style={{ fontSize: '14px', color: '#ff384c', marginTop: '6px', fontWeight: '600', background: 'rgba(255, 56, 76, 0.1)', padding: '2px 8px', borderRadius: '4px', display: 'inline-block' }}>
+                          FAKE: {modelBreakdown.resnet.verdict === 'FAKE' ? modelBreakdown.resnet.confidence : (100 - modelBreakdown.resnet.confidence).toFixed(1)}%
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* LAYER 2: ACOUSTIC PHYSICS REFINEMENT (THE MATH) */}
+                    {modelBreakdown.acoustics && modelBreakdown.acoustics.modifier_percent !== 0 && (
+                      <div style={{ padding: "16px 20px", background: "#0a1022", border: `1px solid ${modelBreakdown.acoustics.modifier_percent > 0 ? 'rgba(255, 56, 76, 0.35)' : 'rgba(53, 209, 13, 0.35)'}`, borderRadius: "8px", display: "flex", alignItems: "center", justifyItems: "center", gap: "20px", animation: "fadeUp 0.45s ease" }}>
+                        
+                        {/* Status Icon */}
+                        <div style={{ flexShrink: 0, color: modelBreakdown.acoustics.modifier_percent > 0 ? "#ff384c" : "#35d10d" }}>
+                          {modelBreakdown.acoustics.modifier_percent > 0 ? (
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                          ) : (
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><polyline points="9 12 11 14 15 10"></polyline></svg>
+                          )}
+                        </div>
+
+                        {/* Academically Safe Text */}
+                        <div style={{ flexGrow: 1, textAlign: "left" }}>
+                          <h4 style={{ margin: "0 0 4px 0", color: "rgba(255, 255, 255, 0.6)", fontSize: "12px", textTransform: "uppercase", letterSpacing: "1px" }}>Signal Processing Analysis</h4>
+                          <div style={{ color: modelBreakdown.acoustics.modifier_percent > 0 ? "#ff384c" : "#35d10d", fontWeight: "700", fontSize: "16px", marginBottom: "4px" }}>
+                            {modelBreakdown.acoustics.modifier_percent > 0 ? "Synthetic Traits Detected" : "Biological Traits Verified"}
+                          </div>
+                          <div style={{ color: "rgba(255, 255, 255, 0.8)", fontSize: "14px", lineHeight: "1.4" }}>
+                            {modelBreakdown.acoustics.modifier_percent > 0 
+                              ? "Acoustic metrics indicate abnormally rigid pitch patterns and artificial signal cleanliness." 
+                              : "Acoustic metrics confirm natural pitch fluctuations and normal ambient signal variance."}
+                          </div>
+                        </div>
+
+                        {/* The Traceable Math Receipt */}
+                        <div style={{ background: "rgba(0,0,0,0.4)", border: "1px solid rgba(255,255,255,0.05)", padding: "10px 14px", borderRadius: "6px", fontFamily: "monospace", fontSize: "13px", color: "#cbd5e1", textAlign: "right", minWidth: "160px" }}>
+                          <div style={{ marginBottom: "4px" }}>[AI Base : {modelBreakdown.resnet.verdict === 'FAKE' ? modelBreakdown.resnet.confidence : (100 - modelBreakdown.resnet.confidence).toFixed(1)}%]</div>
+                          <div style={{ marginBottom: "6px", borderBottom: "1px dashed rgba(255,255,255,0.1)", paddingBottom: "6px" }}>[DSP Adj : {modelBreakdown.acoustics.modifier_percent > 0 ? '+' : ''}{modelBreakdown.acoustics.modifier_percent}%]</div>
+                          <div style={{ fontWeight: "700", fontSize: "14px", color: modelBreakdown.acoustics.modifier_percent > 0 ? "#ff384c" : "#35d10d" }}>
+                            = Final AI: {aiPercent}%
+                          </div>
+                        </div>
+
+                      </div>
+                    )}
+                  </div>
+                )}
+                {/* === DATA WATERFALL END === */}
+
+                {/* === FLOW STEP 3: FINAL VERDICT === */}
+                <div className="upload__cards" style={{ marginTop: 0 }}>
                   <div className="upload__card upload__card--human">
                     <div className="upload__cardIcon">
                       <svg width="72" height="72" viewBox="0 0 24 24">
@@ -415,7 +508,7 @@ const Upload = () => {
                     <div className="upload__cardContent">
                       <h3>Real Human Voice</h3>
                       <div className="upload__cardPercent">{humanPercent}%</div>
-                      <p>Likely Human-Generated</p>
+                      <p>Final System Verdict</p>
                     </div>
                   </div>
 
@@ -428,32 +521,19 @@ const Upload = () => {
                     <div className="upload__cardContent">
                       <h3>AI-Generated</h3>
                       <div className="upload__cardPercent">{aiPercent}%</div>
-                      <p>Low Chance of AI</p>
+                      <p>Final System Verdict</p>
                     </div>
                   </div>
                 </div>
 
-                {modelBreakdown && (
-                  <div className="upload__modelGrid">
-                    <div className="upload__modelCard">
-                      <h4>12k Super Model</h4>
-                      <div
-                        className={`upload__modelVerdict upload__modelVerdict--${modelBreakdown.super.verdict.toLowerCase()}`}
-                      >
-                        {modelBreakdown.super.verdict} ({modelBreakdown.super.confidence}%)
-                      </div>
-                    </div>
-                    
-                    <div className="upload__modelCard upload__modelCard--super">
-                      <h4>ResNet-18 (Latest)</h4>
-                      <div
-                        className={`upload__modelVerdict upload__modelVerdict--${modelBreakdown.resnet.verdict.toLowerCase()}`}
-                      >
-                        {modelBreakdown.resnet.verdict} ({modelBreakdown.resnet.confidence}%)
-                      </div>
-                    </div>
+                <div className="upload__finalBar">
+                  <div className="upload__finalBarHuman" style={{ width: `${humanPercent}%` }}>
+                    {humanPercent}% Human
                   </div>
-                )}
+                  <div className="upload__finalBarAi" style={{ width: `${aiPercent}%` }}>
+                    {aiPercent}% AI
+                  </div>
+                </div>
 
                 {showAnalysis && (
                   <>
@@ -562,15 +642,6 @@ const Upload = () => {
                     </div>
                   </>
                 )}
-
-                <div className="upload__finalBar">
-                  <div className="upload__finalBarHuman" style={{ width: `${humanPercent}%` }}>
-                    {humanPercent}% Human
-                  </div>
-                  <div className="upload__finalBarAi" style={{ width: `${aiPercent}%` }}>
-                    {aiPercent}% AI
-                  </div>
-                </div>
 
                 <div className="upload__actions">
                   <button className="upload__button upload__button--primary" onClick={handleBrowse} type="button">

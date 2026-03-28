@@ -1014,3 +1014,194 @@
     font-size: 12px;
   }
 }
+
+/* --- Acoustic Physics Alert UI --- */
+.upload__acousticAlert {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 16px;
+  margin-bottom: 24px;
+  padding: 16px 20px;
+  border-radius: 8px;
+  animation: fadeUp 0.45s ease;
+  background: #0a1022;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  text-align: left;
+}
+
+.upload__acousticAlert--penalty {
+  border: 1px solid rgba(255, 56, 76, 0.4);
+  background: linear-gradient(90deg, rgba(255, 56, 76, 0.08) 0%, rgba(10, 16, 34, 1) 100%);
+}
+
+.upload__acousticAlert--bonus {
+  border: 1px solid rgba(53, 209, 13, 0.4);
+  background: linear-gradient(90deg, rgba(53, 209, 13, 0.08) 0%, rgba(10, 16, 34, 1) 100%);
+}
+
+.upload__acousticAlertIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.upload__acousticAlert--penalty .upload__acousticAlertIcon {
+  color: #ff384c;
+  filter: drop-shadow(0 0 8px rgba(255, 56, 76, 0.6));
+}
+
+.upload__acousticAlert--bonus .upload__acousticAlertIcon {
+  color: #35d10d;
+  filter: drop-shadow(0 0 8px rgba(53, 209, 13, 0.6));
+}
+
+.upload__acousticAlertContent {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.upload__acousticAlertTitle {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.upload__acousticAlertMessage {
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.upload__acousticAlert--penalty .upload__acousticAlertMessage {
+  color: #ff384c;
+}
+
+.upload__acousticAlert--bonus .upload__acousticAlertMessage {
+  color: #35d10d;
+}
+
+.upload__acousticAlertValue {
+  font-weight: 600;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* --- UNIFIED ANALYSIS CARD UI --- */
+.upload__unifiedCard {
+  background: #0a1022;
+  border: 1px solid rgba(100, 147, 255, 0.25);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  margin-bottom: 24px;
+  animation: fadeUp 0.45s ease;
+}
+
+.upload__unifiedMathRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 32px;
+  gap: 16px;
+}
+
+.upload__unifiedBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  flex: 1;
+}
+
+.upload__unifiedLabel {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #94a3b8;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.upload__unifiedValue {
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.1;
+  margin-bottom: 6px;
+}
+
+.upload__unifiedValue--base { color: #f87171; } /* Base AI usually indicated as a threat metric */
+.upload__unifiedValue--penalty { color: #ff384c; }
+.upload__unifiedValue--bonus { color: #35d10d; }
+.upload__unifiedValue--final { color: #ffffff; }
+
+.upload__unifiedSub {
+  font-size: 13px;
+  color: #64748b;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 4px 10px;
+  border-radius: 4px;
+}
+
+.upload__unifiedOperator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #171e36;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 20px;
+  font-weight: 700;
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
+.upload__unifiedFooter {
+  background: rgba(0, 0, 0, 0.3);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 20px 32px;
+}
+
+.upload__unifiedBarWrap {
+  display: flex;
+  height: 32px;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+}
+
+.upload__unifiedBarHuman,
+.upload__unifiedBarAi {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  white-space: nowrap;
+  font-size: 15px;
+  font-weight: 700;
+  transition: width 0.5s ease;
+}
+
+.upload__unifiedBarHuman { background: #35d10d; }
+.upload__unifiedBarAi { background: #ff384c; }
+
+@media (max-width: 768px) {
+  .upload__unifiedMathRow {
+    flex-direction: column;
+    gap: 20px;
+    padding: 24px 20px;
+  }
+  .upload__unifiedOperator {
+    width: 30px;
+    height: 30px;
+    font-size: 16px;
+  }
+  .upload__unifiedFooter {
+    padding: 20px;
+  }
+}
