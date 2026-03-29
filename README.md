@@ -34,14 +34,16 @@ The system utilizes **Deterministic Scoring Fusion** to provide a "Mathematical 
 * PyTorch & Librosa
 
 ### 1. Backend (FastAPI)
-Bash
+
+```bash
 cd backend
 pip install -r requirements.txt
-# Place resnet18_weights.pth in the /models directory
-python main.py
+python -m uvicorn main:app --reload
+```
 
 ### 2. Frontend (React)
-Bash
+
+```bash
 cd frontend
 npm install
 npm start
