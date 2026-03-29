@@ -45,13 +45,3 @@ Bash
 cd frontend
 npm install
 npm start
-
-Project Structure
-├── docs/               # Technical Report, DFD, and Architecture Diagrams
-├── models/             # Pre-trained ResNet-18 weights and physics logic
-├── src/
-│   ├── backend/        # FastAPI server and feature extraction scripts
-│   └── frontend/       # React components (Analysis Cards, Gauges)
-├── requirements.txt    # Backend dependencies
-└── README.md           # Project documentation
-
