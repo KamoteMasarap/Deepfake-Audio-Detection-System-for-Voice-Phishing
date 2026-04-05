@@ -100,6 +100,8 @@ def analyze_audio(file: UploadFile = File(...)):
         print("Step 1: Loading audio with librosa...")
         audio_data, sample_rate = librosa.load(temp_audio_path, sr=16000)
         
+        audio_data = librosa.util.fix_length(data=audio_data, size=64000)
+        
         print("Step 2: Extracting Dynamic Audio Features (Level 1)...")
         f0, voiced_flag, voiced_probs = librosa.pyin(audio_data, fmin=librosa.note_to_hz('C2'), fmax=librosa.note_to_hz('C7'))
         valid_f0 = f0[~np.isnan(f0)]
@@ -125,10 +127,7 @@ def analyze_audio(file: UploadFile = File(...)):
         onset_env = librosa.onset.onset_strength(y=audio_data, sr=sample_rate)
         onset_variance = float(np.var(onset_env))
 
-        print("Step 3: Forcing audio to exactly 4 seconds...")
-        audio_data = librosa.util.fix_length(audio_data, size=64000)
-
-        print("Step 4: Generating Spectrograms...")
+        print("Step 3: Generating Spectrograms...")
         mel_spect = librosa.feature.melspectrogram(y=audio_data, sr=sample_rate, n_mels=128)
         mel_spect_db = librosa.power_to_db(mel_spect, ref=np.max)
 
@@ -164,7 +163,7 @@ def analyze_audio(file: UploadFile = File(...)):
             acoustic_modifier = 0.0
             override_msg = None
 
-            # 1. PITCH VARIATION CHECK (Level 1)
+            # 1. PITCH VARIATION CHECK
             if pitch_variation < 5.0:
                 acoustic_modifier += 0.45
                 override_msg = "🚨 VETO: Biologically impossible pitch variation (Robotic)."
@@ -175,7 +174,7 @@ def analyze_audio(file: UploadFile = File(...)):
             elif pitch_variation > 25.0:
                 acoustic_modifier -= 0.15
 
-            # 2. ZERO CROSSING RATE CHECK (Level 1)
+            # 2. ZERO CROSSING RATE CHECK
             if zcr < 0.01:
                 acoustic_modifier += 0.35
                 if not override_msg:
@@ -183,27 +182,27 @@ def analyze_audio(file: UploadFile = File(...)):
             elif zcr < 0.05:
                 acoustic_modifier += 0.05
 
-            # 3. MFCC VARIANCE CHECK (Level 2: Vocal Tract)
+            # 3. MFCC VARIANCE CHECK
             if mfcc_variance < 150.0: 
                 acoustic_modifier += 0.20
                 if not override_msg:
                     override_msg = "🚨 VETO: Synthetic vocal tract detected (Low MFCC Variance)."
-            
-            # 4. SPECTRAL ROLL-OFF CHECK (Level 2: Muffled/Hiss)
+                    
+            # 4. SPECTRAL ROLL-OFF CHECK
             if rolloff_mean < 2000.0:
                 acoustic_modifier += 0.15
                 if not override_msg:
                     override_msg = "🚨 VETO: Unnatural high-frequency cutoff (Muffled)."
                     
-            # 5. ONSET VARIANCE CHECK (Level 2: Syllable Attack)
+            # 5. ONSET VARIANCE CHECK
             if onset_variance < 0.5:
                 acoustic_modifier += 0.15
                 if not override_msg:
                     override_msg = "🚨 VETO: Robotic syllable emphasis (Uniform Onset)."
-
+                    
             # --- CALCULATE TRUE FINAL ---
             final_fake_prob = base_fake_prob + acoustic_modifier
-            final_fake_prob = max(0.0, min(1.0, final_fake_prob)) # Clamp between 0 and 1
+            final_fake_prob = max(0.0, min(1.0, final_fake_prob)) #between 0 and 1
             
             # ResNet raw logic (For the diagnostic UI card)
             resnet_verdict = "FAKE" if base_fake_prob > 0.5 else "REAL"
@@ -212,7 +211,6 @@ def analyze_audio(file: UploadFile = File(...)):
             # True Hybrid logic (For the main progress bar)
             final_verdict = "FAKE" if final_fake_prob >= 0.5 else "REAL"
             final_confidence = round((final_fake_prob if final_fake_prob >= 0.5 else 1.0 - final_fake_prob) * 100, 2)
-            # --- END MODIFIER ---
 
         print(f"RESULTS | Super: {super_verdict} ({super_confidence}%) | Final Hybrid: {final_verdict} ({final_confidence}%)")
 
